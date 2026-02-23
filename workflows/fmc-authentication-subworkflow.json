@@ -1,0 +1,182 @@
+{
+  "name": "FMC-Authentication-SubWorkflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -432,
+        -512
+      ],
+      "id": "870b9a2e-132d-4c62-9786-9d539da73e9a",
+      "name": "N8N bug... Needed to be able to publish sub-workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  // Get username and password from input\n  const username = item.json.fmc_username || \"\";\n  const password = item.json.fmc_password || \"\";\n  \n  // Create basic auth token\n  const credentials = `${username}:${password}`;\n  const basicAuth = Buffer.from(credentials).toString('base64');\n  \n  // Add basicAuth to the item\n  item.json.basicAuth = basicAuth;\n  item.json.test_fmc = item.json.fmc || \"\";\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -96
+      ],
+      "id": "69680a3c-0a19-4c65-99dd-5ac1d8d884e1",
+      "name": "Extract Username and Password from Vault ouput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $json.fmc }}/api/fmc_platform/v1/auth/generatetoken",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Basic {{$json.basicAuth}}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        112
+      ],
+      "id": "12f2b695-3817-47bb-b2b3-ce8f1ed4f034",
+      "name": "HTTP Request to get FMC Token",
+      "alwaysOutputData": true,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e16e45a-b281-4884-8d63-da940d13b0b8",
+              "name": "access_token",
+              "value": "={{ $json.headers[\"x-auth-access-token\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "8f01471f-5884-4621-8a41-66349a1d0577",
+              "name": "domain_uuid",
+              "value": "={{ $json.headers[\"domain_uuid\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "1e1ffaee-266a-4335-8bb8-a89dc93a1521",
+              "name": "refresh_token",
+              "value": "={{ $json.headers[\"x-auth-refresh-token\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        304
+      ],
+      "id": "26ab4e69-8d76-40f7-856a-c720e428371a",
+      "name": "Extract Vars_01 = Token and FMC IP",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -336
+      ],
+      "id": "aa1f8213-0f95-4dc7-82c0-897dcd5732d2",
+      "name": "Get data from Vars from Jenkins webhook call & Vault creds retrival (from Main Orch workflow)"
+    }
+  ],
+  "connections": {
+    "Extract Username and Password from Vault ouput": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request to get FMC Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request to get FMC Token": {
+      "main": [
+        [
+          {
+            "node": "Extract Vars_01 = Token and FMC IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get data from Vars from Jenkins webhook call & Vault creds retrival (from Main Orch workflow)": {
+      "main": [
+        [
+          {
+            "node": "Extract Username and Password from Vault ouput",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Needed to be able to publish sub-workflow. N8N bug": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:N8N bug... Needed to be able to publish sub-workflow": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6c1cf2af-b71b-42fc-aa4b-5d13cb14b27c",
+  "tags": []
+}

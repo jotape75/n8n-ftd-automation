@@ -1,0 +1,360 @@
+{
+  "name": "FTD-Main-Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "UNVZ0IDAISzm9jQl",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/UNVZ0IDAISzm9jQl"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        -144
+      ],
+      "id": "b95eba17-b4b2-477a-823d-a7411b2c93d8",
+      "name": "Call 'FMC-Authentication-SubWorkflow'",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "UZiyNyR8pt9UCHib",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/UZiyNyR8pt9UCHib",
+          "cachedResultName": "FMC-Device-Registration-SubWorkflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        80
+      ],
+      "id": "0b1c95c3-5a7a-4479-9d60-20622616f057",
+      "name": "Call 'FMC-Device-Registration-SubWorkflow'"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "device-registration",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        -832
+      ],
+      "id": "3c1a2938-f2a6-4e8e-86e3-c4dee465d95b",
+      "name": "jenkins_webhook",
+      "webhookId": "8c53320a-fff3-4f1d-b736-c7d352ce113d"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4c98ff36-ac86-40b1-90ab-20b994034dfe",
+              "name": "fmc",
+              "value": "={{ $('jenkins_webhook').item.json.body.fmc.ip }}",
+              "type": "string"
+            },
+            {
+              "id": "de625137-aa7b-416d-a7c5-fae7744985b1",
+              "name": "device1_name",
+              "value": "={{ $('jenkins_webhook').item.json.body.devices[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "87319fb4-179c-410c-b03a-e8e2901f25f0",
+              "name": "device1_host",
+              "value": "={{ $('jenkins_webhook').item.json.body.devices[0].hostName }}",
+              "type": "string"
+            },
+            {
+              "id": "ce2935ec-f3c5-4716-ad0d-f6df4f70d4ad",
+              "name": "device1_regkey",
+              "value": "={{ $('jenkins_webhook').item.json.body.devices[0].regKey.plainText }}",
+              "type": "string"
+            },
+            {
+              "id": "c50e3da5-ce62-4f40-8921-db794fefe51c",
+              "name": "device2_name",
+              "value": "={{ $('jenkins_webhook').item.json.body.devices[1].name }}",
+              "type": "string"
+            },
+            {
+              "id": "d36269e6-8f53-41cd-ad7d-5a87992e2890",
+              "name": "device2_host",
+              "value": "={{ $('jenkins_webhook').item.json.body.devices[1].hostName }}",
+              "type": "string"
+            },
+            {
+              "id": "98685535-6241-46da-9550-1a7567706d8a",
+              "name": "device2_regkey",
+              "value": "={{ $('jenkins_webhook').item.json.body.devices[1].regKey.plainText }}",
+              "type": "string"
+            },
+            {
+              "id": "c80e4e8b-461d-4020-9126-ba00739e0ab8",
+              "name": "fmc_username",
+              "value": "={{ $json.data.data.username }}",
+              "type": "string"
+            },
+            {
+              "id": "03826c2e-e8ee-42b3-aed7-c79f6402b754",
+              "name": "fmc_password",
+              "value": "={{ $json.data.data.password }}",
+              "type": "string"
+            },
+            {
+              "id": "ffb11e6f-dedf-4272-937a-9bb7236c1c27",
+              "name": "email_destination",
+              "value": "={{ $('jenkins_webhook').item.json.body.notification.email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        -384
+      ],
+      "id": "d3cbd582-f38b-49d7-ad21-cb813b59d3d5",
+      "name": "Vars from Jenkins webhook call & Vault creds retrival",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.206:8200/v1/secret/data/fmc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Vault-Token",
+              "value": "={{ $json.vault_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        -608
+      ],
+      "id": "25098ae8-2eea-45ec-a9b6-ee1157a79cd3",
+      "name": "Vault FMC creds retrival"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Ug7tRSGJ4brDZkHo",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/Ug7tRSGJ4brDZkHo"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        80
+      ],
+      "id": "64dd7c3f-ded9-42e8-9a91-ab055e468fd8",
+      "name": "Call 'FMC-Device-Registration-Monitoring-SubWorkflow'",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1978e031-9d38-4ad1-87d2-5e238ac87327",
+              "name": "fmc",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.fmc }}",
+              "type": "string"
+            },
+            {
+              "id": "f8c8021c-ba56-4213-bd9a-f038c11cf870",
+              "name": "device1_name",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.device1_name }}",
+              "type": "string"
+            },
+            {
+              "id": "2ea2a48b-1dc8-41c2-a1d1-17d830dbaeff",
+              "name": "device1_host",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.device1_host }}",
+              "type": "string"
+            },
+            {
+              "id": "d330382b-c26e-4f79-8c79-96ed05ae0f6b",
+              "name": "device1_regkey",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.device1_regkey }}",
+              "type": "string"
+            },
+            {
+              "id": "723ae280-b1fd-43d4-9175-6cebf732336c",
+              "name": "device2_name",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.device2_name }}",
+              "type": "string"
+            },
+            {
+              "id": "200c7c7b-4a99-49fd-a1df-fb790d2e6ee6",
+              "name": "device2_host",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.device2_host }}",
+              "type": "string"
+            },
+            {
+              "id": "461da185-5b24-46ba-8dc8-9958b3be3316",
+              "name": "device2_regkey",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.device2_regkey }}",
+              "type": "string"
+            },
+            {
+              "id": "8d59d372-9260-4ea9-b988-6a60b9c0664f",
+              "name": "email_destination",
+              "value": "={{ $('Vars from Jenkins webhook call & Vault creds retrival').item.json.email_destination }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        80
+      ],
+      "id": "984504fd-2ae6-4cd3-b659-414ed455fc6f",
+      "name": "Extract Vars_01"
+    }
+  ],
+  "connections": {
+    "Call 'FMC-Authentication-SubWorkflow'": {
+      "main": [
+        [
+          {
+            "node": "Extract Vars_01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "jenkins_webhook": {
+      "main": [
+        [
+          {
+            "node": "Vault FMC creds retrival",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vars from Jenkins webhook call & Vault creds retrival": {
+      "main": [
+        [
+          {
+            "node": "Call 'FMC-Authentication-SubWorkflow'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vault FMC creds retrival": {
+      "main": [
+        [
+          {
+            "node": "Vars from Jenkins webhook call & Vault creds retrival",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'FMC-Device-Registration-SubWorkflow'": {
+      "main": [
+        [
+          {
+            "node": "Call 'FMC-Device-Registration-Monitoring-SubWorkflow'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Vars_01": {
+      "main": [
+        [
+          {
+            "node": "Call 'FMC-Device-Registration-SubWorkflow'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "bef21eed-74c8-4318-8e2d-d7089d61b034",
+  "tags": []
+}

@@ -1,0 +1,384 @@
+{
+  "name": "FMC-Device-Registration-SubWorkflow",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldToSplitOut": "items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        256
+      ],
+      "id": "1e6789e4-39c9-4e54-bd6e-a03f71cbbcdc",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ab3aeef1-c07a-454b-aa36-664d4161aaa6",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "Initial_policy",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        256
+      ],
+      "id": "0b0376da-661a-467c-82f6-2d52377ddf48",
+      "name": "Filter"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -208,
+        192
+      ],
+      "id": "0bef1cfa-c80e-4432-902c-9fc57bf4edf1",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -624,
+        -368
+      ],
+      "id": "3776ee4d-6cb3-4c28-85b6-e897d483a1f1",
+      "name": "N8N bug... Needed to be able to publish sub-workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -192
+      ],
+      "id": "4c76d33b-31fd-4a1c-9112-9d6c6973859f",
+      "name": "Input data from Extract Vars_01 (Main Orch workflow)"
+    },
+    {
+      "parameters": {
+        "url": "=https://{{ $json.fmc }}/api/fmc_config/v1/domain/default/policy/accesspolicies",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-auth-access-token",
+              "value": "={{ $json.access_token }}"
+            },
+            {
+              "name": "x-auth-refresh-token",
+              "value": "={{ $json.refresh_token }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -624,
+        48
+      ],
+      "id": "8fe5f333-bc94-4717-bb80-18336fbf3c28",
+      "name": "HTTPP POST Request to get Initial Policy"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $json.fmc }}/api/fmc_config/v1/domain/default/devices/devicerecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-auth-access-token",
+              "value": "={{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.device1_name }}\",\n  \"hostName\": \"{{ $json.device1_host }}\",\n  \"regKey\": \"{{ $json.device1_regkey }}\",\n  \"type\": \"Device\",\n  \"accessPolicy\": {\n    \"id\": \"{{ $input.all()[1].json.id }}\",\n    \"type\": \"AccessPolicy\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        96
+      ],
+      "id": "e314c691-5610-465a-91e2-970d2764b8b5",
+      "name": "HTTPP POST Request to add device 01 on FMC",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $json.fmc }}/api/fmc_config/v1/domain/default/devices/devicerecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-auth-access-token",
+              "value": "={{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.device2_name }}\",\n  \"hostName\": \"{{ $json.device2_host }}\",\n  \"regKey\": \"{{ $json.device2_regkey }}\",\n  \"type\": \"Device\",\n  \"license_caps\": [\"BASE\"],\n  \"accessPolicy\": {\n    \"id\": \"{{ $input.all()[1].json.id }}\",\n    \"type\": \"AccessPolicy\"\n  }\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        272
+      ],
+      "id": "888f4b9a-35d9-4e4e-8ab5-06bc5e01f7d1",
+      "name": "HTTPP POST Request to add device 02 on FMC",
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        256,
+        192
+      ],
+      "id": "669e5735-4347-4f53-acee-ef11624f02f4",
+      "name": "Merge Output from HTTP requests"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9f912b6-20af-416b-a736-6a0fb4d8890a",
+              "name": "access_token",
+              "value": "={{ $('Input data from Extract Vars_01 (Main Orch workflow)').item.json.access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "de322840-d018-4091-924b-aece03e26a1a",
+              "name": "fmc",
+              "value": "={{ $('Input data from Extract Vars_01 (Main Orch workflow)').item.json.fmc }}",
+              "type": "string"
+            },
+            {
+              "id": "383cb4c3-6831-4189-8901-594f9067de4e",
+              "name": "device1_name",
+              "value": "={{ $('Input data from Extract Vars_01 (Main Orch workflow)').item.json.device1_name }}",
+              "type": "string"
+            },
+            {
+              "id": "19f7c5a7-b5ba-484b-bd6d-59d289dbc077",
+              "name": "device2_name",
+              "value": "={{ $('Input data from Extract Vars_01 (Main Orch workflow)').item.json.device2_name }}",
+              "type": "string"
+            },
+            {
+              "id": "2ffbae39-a769-4c49-9fc7-44132108b4b0",
+              "name": "email_destination",
+              "value": "={{ $('Input data from Extract Vars_01 (Main Orch workflow)').item.json.email_destination }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        192
+      ],
+      "id": "ae107fa9-029f-44ce-a4ea-2aa000b3dd32",
+      "name": "Extract data from HTTP requests"
+    },
+    {
+      "parameters": {
+        "keep": "lastItems"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        656,
+        192
+      ],
+      "id": "244e0991-97b1-4755-99a2-d27cc0fa80da",
+      "name": "Limit output to 1"
+    }
+  ],
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "HTTPP POST Request to add device 01 on FMC",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTPP POST Request to add device 02 on FMC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input data from Extract Vars_01 (Main Orch workflow)": {
+      "main": [
+        [
+          {
+            "node": "HTTPP POST Request to get Initial Policy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTPP POST Request to get Initial Policy": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTPP POST Request to add device 01 on FMC": {
+      "main": [
+        [
+          {
+            "node": "Merge Output from HTTP requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTPP POST Request to add device 02 on FMC": {
+      "main": [
+        [
+          {
+            "node": "Merge Output from HTTP requests",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Output from HTTP requests": {
+      "main": [
+        [
+          {
+            "node": "Extract data from HTTP requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract data from HTTP requests": {
+      "main": [
+        [
+          {
+            "node": "Limit output to 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:N8N bug... Needed to be able to publish sub-workflow": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "905b0cd4-f700-4744-bdee-0e716e2ebbaa",
+  "tags": []
+}
