@@ -54,28 +54,22 @@ Wait 30s ←── Retry Loop
    - Import `workflows/fmc-authentication-subworkflow.json`
    - Import `workflows/fmc-device-registration-subworkflow.json`  
    - Import `workflows/fmc-device-registration-monitoring-subworkflow.json`
-   - Optional: Import `workflows/ai-workflow-manager.json`
 
-3. **Configure credentials** (see [Configuration Guide](docs/configuration.md))
+3. **Configure credentials** in n8n (Vault token, FMC host, SMTP settings)
 
-4. **Set up Jenkins webhook** (see [Setup Guide](docs/setup-guide.md))
+4. **Set up Jenkins webhook** using the provided `Jenkinsfile`
 
 ## 📁 Repository Structure
 
 ```
 fmc-n8n-workflows/
 ├── README.md                                                    # This file
+├── Jenkinsfile                                                  # Jenkins pipeline for webhook trigger
 ├── workflows/
 │   ├── ftd-main-orchestrator.json                              # 🎯 Main deployment orchestrator
 │   ├── fmc-authentication-subworkflow.json                     # 🔐 FMC authentication handler
 │   ├── fmc-device-registration-subworkflow.json                # 📝 Device registration manager
-│   ├── fmc-device-registration-monitoring-subworkflow.json     # 📊 Deployment monitoring & retry
-│   └── ai-workflow-manager.json                                # 🤖 AI workflow manager (optional)
-├── docs/
-│   ├── setup-guide.md                                          # Complete setup instructions
-│   ├── configuration.md                                        # Configuration reference
-│   ├── troubleshooting.md                                      # Common issues and solutions
-│   └── screenshots/                                            # Visual guides
+│   └── fmc-device-registration-monitoring-subworkflow.json     # 📊 Deployment monitoring & retry
 └── .gitignore                                                  # Git ignore rules
 ```
 
@@ -161,109 +155,9 @@ parameters {
 | 7 | Wait2 (30 sec) | Retry delay before next check |
 | 8 | Email Success/Failure | Sends completion notifications |
 
-## 🔧 Critical Code Snippets
-
-### URL Normalization (Code Node)
-```javascript
-// Get all input items
-const items = $input.all();
-
-// Try to get access_token from Check Device Count node
-const checkDeviceCount = $('Check Device Count').first();
-let access_token = checkDeviceCount?.json?.access_token;
-
-// Process each item
-return items.map(item => {
-  let url;
-  
-  // Check if data has 'items' object (from Check Device Count)
-  if (item.json.items && item.json.items.links) {
-    url = item.json.items.links.self;
-  }
-  // Otherwise it's from Wait2 (direct links.self)
-  else if (item.json.links && item.json.links.self) {
-    url = item.json.links.self;
-  }
-  
-  // Return normalized structure
-  return {
-    json: {
-      url: url,
-      access_token: access_token,
-      ...item.json
-    }
-  };
-});
-```
-
-### Timestamp Formatting
-```javascript
-// Formatted timestamp for emails
-{{ $now.format('MMM d, yyyy h:mm a') }}
-// Output: Feb 23, 2026 3:54 PM
-```
-
-### Access Token Reference
-```javascript
-// Persistent access token in HTTP headers
-{{ $('Check Device Count').first().json.access_token }}
-```
-
-## 📧 Email Templates
-
-### Success Notification
-```
-✅ FMC Device Deployment - SUCCESS
-
-Status: Completed Successfully
-
-Devices Deployed:
-• ciscoftd02 (192.168.0.202) - Deployment: OK, Health: GOOD  
-• ciscoftd03 (192.168.0.203) - Deployment: OK, Health: GOOD
-
-📊 Summary: All devices successfully deployed and operational
-
-Timestamp: Feb 23, 2026 3:54 PM
-```
-
-### Failure Notification  
-```
-❌ FMC Device Deployment - FAILURE
-
-Status: Deployment Failed
-
-Devices:
-• ciscoftd02 (192.168.0.202) - Deployment: FAILED
-• ciscoftd03 (192.168.0.203) - Deployment: PENDING
-
-📊 Summary: Deployment timeout after 40 retry attempts
-
-Timestamp: Feb 23, 2026 4:24 PM
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| "Access token not found" | Use `{{ $('Check Device Count').first().json.access_token }}` |
-| Email shows "undefined" | Verify `email_destination` passes through all nodes |
-| URL returns undefined | Check Normalize URL Data code handles both data sources |
-| Loop doesn't work | Ensure Wait2 connects to Normalize URL Data |
-| Wrong timestamp format | Use `{{ $now.format('MMM d, yyyy h:mm a') }}` |
-
-### Debug Mode
-Enable debug logging in n8n:
-```env
-N8N_LOG_LEVEL=debug
-```
-
 ## 📚 Documentation
 
-- [📖 Complete Setup Guide](docs/setup-guide.md) - Step-by-step installation
-- [⚙️ Configuration Reference](docs/configuration.md) - All settings explained  
-- [🔧 Troubleshooting Guide](docs/troubleshooting.md) - Solutions to common issues
+- [� Jenkinsfile](Jenkinsfile) - Jenkins pipeline for triggering deployments via webhook
 
 ## 🤝 Contributing
 
