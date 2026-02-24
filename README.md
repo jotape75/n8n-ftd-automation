@@ -94,40 +94,6 @@ Handles different data structures between initial checks and retry loops with in
 - **Total timeout**: ~20 minutes
 - **Status tracking**: Full deployment and health monitoring
 
-## 🛠️ Configuration
-
-### Environment Variables
-
-```bash
-# FMC API Configuration
-FMC_HOST=192.168.1.100
-FMC_USERNAME=api_user
-FMC_PASSWORD=secure_password
-
-# Email Configuration  
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-EMAIL_FROM=alerts@yourcompany.com
-
-# Vault Configuration
-VAULT_URL=https://vault.company.com
-VAULT_PATH=secret/data/cisco
-```
-
-### Jenkins Parameters
-
-```groovy
-parameters {
-    string(name: 'DEVICE1_NAME', defaultValue: 'ciscoftd02')
-    string(name: 'DEVICE1_HOST', defaultValue: '192.168.0.202') 
-    string(name: 'DEVICE1_REGKEY', defaultValue: 'cisco123')
-    string(name: 'DEVICE2_NAME', defaultValue: 'ciscoftd03')
-    string(name: 'DEVICE2_HOST', defaultValue: '192.168.0.203')
-    string(name: 'DEVICE2_REGKEY', defaultValue: 'cisco123')
-    string(name: 'EMAIL_RECIPIENT', defaultValue: 'admin@company.com')
-}
-```
-
 ## 📊 Workflow Details
 
 ### FTD Main Orchestrator (7 nodes)
